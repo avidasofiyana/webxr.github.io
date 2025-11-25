@@ -1,0 +1,35 @@
+name: Unzip ZIP Files to Root
+
+on:
+  push:
+    paths:
+      - '*.zip'   # Trigger only when ZIP files are pushed
+
+jobs:
+  unzip-to-root:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: List files before extraction
+        run: ls -la
+
+      - name: Extract ZIP files to root
+        run: |
+          for zipfile in *.zip; do
+            echo "Extracting $zipfile to root..."
+            unzip -o "$zipfile" -d .
+          done
+
+      - name: List files after extraction
+        run: ls -la
+
+      - name: Commit extracted files
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Extracted ZIP files to root" || echo "No changes to commit"
+          git push
