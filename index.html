@@ -1,188 +1,135 @@
 <!DOCTYPE html>
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+  <!-- Shared libraries between the application entry point and the components bundle -->
+  <script type="importmap">
+    {
+      "imports": {
+        "@wonderlandengine/api": "./node_modules/@wonderlandengine/api/index.js",
+        "@wonderlandengine/api/decorators.js": "./node_modules/@wonderlandengine/api/index.js"
+      }
+    }
+  </script>
+
   <head>
+    
+    
+    <link rel="modulepreload" href="MyWonderland2-bundle.js?t=2025-11-25T12:47:26.929" as="script">
+    
+    
+    <link rel="modulepreload" href="MyWonderland2-app.js?t=2025-11-25T12:47:26.929" as="script">
+    <title>MyWonderland2</title>
     <meta charset="utf-8" />
-    <title>Kids' Balloon Pop XR</title>
-    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v7.0.0/dist/aframe-extras.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/aframe-super-hands-component@^4.0.0/dist/super-hands.min.js"></script>
-    <script>
-      // Balloon pop logic + physics
-      AFRAME.registerComponent('pop-balloon', {
-        schema: { soundSrc: { type: 'string', default: '#pop-sound' } },
-        init: function () {
-          const el = this.el;
-          el.addEventListener('grab-start', () => {
-            el.setAttribute('animation', {
-              property: 'scale',
-              dur: 100,
-              from: '1 1 1',
-              to: '1.2 1.2 1.2',
-              easing: 'easeInOutQuad'
-            });
-          });
-          el.addEventListener('grab-end', () => {
-            // Throw physics
-            const impulse = new THREE.Vector3(0, 2, -3);
-            el.body.applyImpulse(impulse, el.object3D.position);
-          });
-          el.addEventListener('collide', (e) => {
-            if (e.detail.body.el.tagName === 'A-PLANE') {
-              this.pop();
-            }
-          });
-          // Pop on touch (for mobile/desktop)
-          el.addEventListener('click', this.pop.bind(this));
-        },
-        pop: function () {
-          const el = this.el;
-          el.components.sound && el.components.sound.playSound();
-          el.setAttribute('visible', false);
-          el.setAttribute('dynamic-body', 'enabled', false);
 
-          // ✨ Particle burst
-          const burst = document.createElement('a-entity');
-          burst.setAttribute('particle-system', {
-            preset: 'dust',
-            color: el.getAttribute('material').color,
-            particleCount: 100,
-            maxAge: 0.8
-          });
-          burst.setAttribute('position', el.getAttribute('position'));
-          el.sceneEl.appendChild(burst);
-          setTimeout(() => burst.parentNode.removeChild(burst), 1000);
-        }
-      });
+    <meta property="og:title" content="MyWonderland2" />
+    <meta property="og:type" content="website" />
+    <meta property="og:description" content="Wonderland Engine based project." />
+    
 
-      // Spawn balloons in a semi-circle
-      AFRAME.registerComponent('balloon-spawner', {
-        schema: { count: { default: 6 } },
-        init: function () {
-          const colors = ['#ff6b6b', '#4ecdc4', '#ffd166', '#06d6a0', '#118ab2', '#ef476f'];
-          for (let i = 0; i < this.data.count; i++) {
-            const angle = (i / this.data.count) * Math.PI - Math.PI / 2;
-            const x = Math.cos(angle) * 2;
-            const z = Math.sin(angle) * 2 + 3;
+    <meta name="twitter:description" content="Wonderland Engine based project." />
+    <meta name="twitter:title" content="MyWonderland2" />
+    <meta name="twitter:card" content="summary_large_image" />
+    
 
-            const balloon = document.createElement('a-sphere');
-            balloon.setAttribute('radius', 0.25);
-            balloon.setAttribute('color', colors[i % colors.length]);
-            balloon.setAttribute('position', { x: x, y: 1.2, z: z });
-            balloon.setAttribute('dynamic-body', { shape: 'sphere', mass: 0.5 });
-            balloon.setAttribute('pop-balloon', '');
-            balloon.setAttribute('super-hands', 'colliderEvent: collide');
-            balloon.setAttribute('sound', {
-              src: '#pop-sound',
-              positional: true,
-              poolSize: 5
-            });
-            // Balloon string
-            const string = document.createElement('a-cylinder');
-            string.setAttribute('height', 0.8);
-            string.setAttribute('radius', 0.005);
-            string.setAttribute('color', '#555');
-            string.setAttribute('position', { x: 0, y: -0.4, z: 0 });
-            balloon.appendChild(string);
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="white">
+    <style>
+    html {
+        height: 100%;
+    }
+    body {
+        height: 100%;
+        margin: 0px;
+        background-image: linear-gradient(black, #2b2b2b);
+    }
+    .xr-button-container {
+      display: block;
+      position: fixed;
+      width: 100%;
+      bottom: 0px;
+      display: flex;
+      justify-content: center;
+      pointer-events: none;
+    }
 
-            this.el.appendChild(balloon);
-          }
-        }
-      });
+    .button {
+      float: left;
+      width: 0px; /* Hidden until we know supported state */
+      padding-left: 10px;
+      padding-bottom: 25px;
+      display: block;
+      pointer-events: all;
+      cursor: pointer;
+      opacity: 0.25;
+    }
+    .button[data-supported] {
+      width: 100px !important;
+      transition: 0.5s;
+    }
+    .button[data-supported='true'] {
+      opacity: 1.0;
+    }
+
+    #canvas {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .xr-button-label {
+      fill: white;
+    }
+
+    .xr-button-frame {
+      stroke: white;
+    }
+
+    #version {
+      text-align: right;
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      color: white;
+      font-size: 18pt;
+      font-family: monospace;
+      /*display: none; */
+      z-index: 99999;
+    }
+
+    #version a {
+      transition: opacity 0.5s;
+      opacity: 0;
+    }
+
+    #version:hover a{
+      opacity: 1;
+    }
+
+    </style>
+
+    
+
+    <script type="module" src="MyWonderland2-app.js?t=2025-11-25T12:47:26.929"></script>
+
+    
     </script>
+    
   </head>
   <body>
-    <!-- 🎵 Pop sound (tiny base64 for demo) -->
-    <audio id="pop-sound" src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFeW5tY19aT0I5LRcJAPXs6OXj3tvY1dHPzMrIx8bFxL+/vby6urm4t7a1tLOysbCvrq2sq6qpqKempaSjoqGgn56dnJuamZiXlpWUk5KRkI+OjYyLioiHhoWEg4KBgH9+fXx7enl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmFgX15dXFtaWVhXVlVUU1JRUE9OTUxLSklIR0ZFRENCQUA/Pj08Ozo5ODc2NTQzMjEwLy4tLCsqKSgnJiUkIyIhIB8eHRwbGhkYFxYVFBMSERAPDg0MCwoJCAcGBQQDAgEA" preload="auto"></audio>
-
-    <a-scene 
-      physics="debug: false; gravity: -9.8"
-      renderer="gammaOutput: true; colorManagement: true"
-      cursor="rayOrigin: mouse"
-      raycaster="objects: .balloon"
-    >
-      <!-- 🌈 AI-generated skybox (via prompt: "whimsical cartoon sky with floating candy clouds and rainbows, ultra HD") -->
-      <a-sky src="https://cdn.glitch.global/8b0c9a37-1f73-4592-8f9f-23514c8a3e78/sky-ai-generated.webp?v=1732555280512" rotation="0 -30 0"></a-sky>
-
-      <!-- 🌳 AI-generated ground (prompt: "colorful grassy hill with flowers and mushrooms, cartoon style, soft shadows") -->
-      <a-plane 
-        position="0 -0.5 -5" 
-        rotation="-90 0 0" 
-        width="20" 
-        height="20"
-        src="https://cdn.glitch.global/8b0c9a37-1f73-4592-8f9f-23514c8a3e78/ground-ai-generated.webp?v=1732555280512"
-        repeat="4 4"
-        static-body
-      ></a-plane>
-
-      <!-- 🎈 Balloons -->
-      <a-entity balloon-spawner="count: 6" position="0 0 -3"></a-entity>
-
-      <!-- 🖐️ Hands (Quest + desktop fallback) -->
-      <a-entity id="rig" movement-controls="fly: true">
-        <a-entity
-          id="camera"
-          camera
-          position="0 1.6 0"
-          look-controls
-        ></a-entity>
-
-        <!-- Left hand -->
-        <a-entity
-          hand-controls="hand: left; handModelStyle: lowPoly; color: #ffcc00"
-          super-hands="colliderEvent: collide"
-          grabbable
-          stretchable
-          position="0.2 1.2 -0.5"
-        ></a-entity>
-
-        <!-- Right hand -->
-        <a-entity
-          hand-controls="hand: right; handModelStyle: lowPoly; color: #ff6699"
-          super-hands="colliderEvent: collide"
-          grabbable
-          stretchable
-          position="-0.2 1.2 -0.5"
-        ></a-entity>
-      </a-entity>
-
-      <!-- 🎯 Instruction UI (visible on non-VR) -->
-      <a-entity
-        position="0 1.8 -2"
-        visible="false"
-        id="ui"
-      >
-        <a-text
-          value="🎮 Grab & throw balloons! 🎈 Pop them on the ground!"
-          align="center"
-          color="#ff6600"
-          width="4"
-        ></a-text>
-        <a-text
-          value="(Use mouse to drag & click on desktop)"
-          align="center"
-          color="#666"
-          position="0 -0.2 0"
-          scale="0.5 0.5 0.5"
-        ></a-text>
-      </a-entity>
-
-      <a-script>
-        // Show UI on non-VR
-        document.addEventListener('DOMContentLoaded', () => {
-          const scene = document.querySelector('a-scene');
-          scene.addEventListener('enter-vr', () => {
-            document.getElementById('ui').setAttribute('visible', false);
-          });
-          scene.addEventListener('exit-vr', () => {
-            if (!AFRAME.utils.device.isMobile()) {
-              document.getElementById('ui').setAttribute('visible', true);
-            }
-          });
-          if (!AFRAME.utils.device.checkHeadsetConnected()) {
-            document.getElementById('ui').setAttribute('visible', true);
-          }
-        });
-      </a-script>
-    </a-scene>
+    <canvas id="canvas" style="width: 100%; height: 100%; display: block;" tabindex="0"></canvas>
+    <div id="version">
+        <a>Wonderland Engine 1.4.7</a>
+    </div>
+    <div class="xr-button-container">
+      <a id="vr-button" class="button">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 109.41 65"><rect class="xr-button-frame" x="3.5" y="3.5" width="102.41" height="58" rx="16.68" style="fill:none;stroke-linejoin:round;stroke-width:7px"/><path class="xr-button-label" d="M36.24,48.84a2,2,0,0,1-1.78-1.15L23.39,17.46a1.84,1.84,0,0,1,1.78-1.84h5.45a1.8,1.8,0,0,1,1.66,1.21l7.29,20.42,7.28-20.42a1.8,1.8,0,0,1,1.67-1.21H54a1.84,1.84,0,0,1,1.78,1.84L44.67,47.69a2,2,0,0,1-1.78,1.15Z"/><path class="xr-button-label" d="M70.61,40H68v7a1.84,1.84,0,0,1-1.78,1.84H61.31A1.83,1.83,0,0,1,59.54,47V17.46a1.83,1.83,0,0,1,1.77-1.84H73s13,.12,13,12.22c0,6-3.21,9-6.42,10.5L86.38,47a1.76,1.76,0,0,1-1.77,1.84h-5.8a1.91,1.91,0,0,1-1.43-.69ZM68,32.09h5c2.24,0,4.08-1.15,4.08-4.25s-1.84-4.36-4.08-4.36H68Z"/></svg>
+      </a>
+      
+    </div>
   </body>
 </html>
