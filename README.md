@@ -1,2 +1,0 @@
-# webxr.github.io
-bismillaah!
